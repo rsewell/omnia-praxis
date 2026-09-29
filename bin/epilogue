@@ -1,0 +1,71 @@
+#!/bin/bash -l 
+# Add RAD tcl lib path to TCLLIBPATH \
+#TCLLIBPATH="/usr/local/lib/RADtcl $TCLLIBPATH" ; export TCLLIBPATH
+# the next line restarts using tclsh \
+exec tclsh "$0" "$@"
+
+package require Thread
+
+set home "[file dirname [file normalize [info script]]]/.."
+
+tsv::set environment home $home
+tsv::set environment should_exit 0
+
+lappend auto_path "[tsv::get environment home]/lib"
+
+package require omnia_utils
+
+proc sigint_trap {} {
+    puts "\ncntrl-c signal recieved - Exiting at first appropriate moment" ; tsv::set environment should_exit 1 
+}
+
+proc sigcfg_trap {} {
+    puts "\ncfg-reset signal recieved - reseting at first appropriate moment" ; tsv::set environment should_reset 1 
+}
+
+if { ![catch {package require Tclx 8.0} tmp] } {
+   signal trap SIGINT sigint_trap
+#   signal trap SIGUSER1 sigcfg_trap
+}
+
+#----------------------------------------------------------------------------------------------------------------------
+# Packages needed by everything
+#
+package require http 2
+package require omnia_utils
+package require omnia_config
+
+set env_found 0
+set newargs {}
+
+for {set i 0 } { $i < [llength $argv] } { incr i } {
+    if {[lindex $argv $i] == "-environment" || [lindex $argv $i] == "-e"} {
+        incr i
+        omnia_config::set_environment [lindex $argv $i]
+        puts "Setting environment to [lindex $argv $i]"
+        set env_found 1
+        continue
+    } 
+    if {[lindex $argv $i] == "-help"} {
+        set usage 1
+        continue
+    } 
+    if {[lindex $argv $i] == "-debug"} {
+        ::katana_logger::set_log_level 5
+        continue
+    } 
+    lappend newargs [lindex $argv $i]
+}
+
+if { $env_found == 0 && [::omnia_config::get_environemnt] == {} } {
+    puts "ERROR: No environment specified - please specify -e or -environment"
+    exit
+}
+
+if { [file exists ${home}/apps/[lindex $newargs 0].tcl] } {
+    source ${home}/apps/[lindex $newargs 0].tcl
+
+    tsv::set environment app_src ${home}/apps/[lindex $newargs 0].tcl
+
+    ::[lindex $newargs 0]::main [lrange $newargs 1 end]
+}

@@ -1,0 +1,33 @@
+
+### Mac OSX crap - should be turned off on my systems but .....
+.DS_Store
+._*
+
+.secrets
+
+cmake-build-debug/
+build/
+target/
+
+### VS Code ###
+.vscode/
+
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+
+### Need to Keep
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+!**/src/main/resources/jars/*.jar
+!**/dist/jars/*.jar
+!**/bin/osx-arm/**
+!**/bin/osx-x64/**
+!**/bin/linux-arm/**
+!**/bin/linux-x64/**
+!**/bin/no-arch/**
